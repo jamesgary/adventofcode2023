@@ -1,0 +1,11 @@
+{
+    "targets": {
+        "aoc main": {
+            "inputs": [
+                "src/Main.elm"
+            ],
+            "output": "public/main.js"
+        }
+    },
+    "serve": "./public/"
+}
