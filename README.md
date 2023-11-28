@@ -1,6 +1,6 @@
 # Advent of Code
 
 ```
-npx install
+npm install
 ./bin/run.sh
 ```
