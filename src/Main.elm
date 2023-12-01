@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Day01.Solver
+import Day02.Solver
 import Html exposing (Html)
 import Html.Attributes as Attr exposing (style)
 
@@ -23,7 +24,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { output =
             -- Update this when starting new puzzle!
-            Day01.Solver.solve
+            Day02.Solver.solve
       }
     , Cmd.none
     )
