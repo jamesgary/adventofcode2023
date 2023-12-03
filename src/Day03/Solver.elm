@@ -26,8 +26,27 @@ solve =
             schematic
                 |> schematicToNums ( 0, 0 )
     in
+    schematic
+        |> Dict.filter (\pos val -> val == '*')
+        |> Dict.keys
+        |> List.map (gearPosToPower schematic nums)
+        |> List.sum
+        |> String.fromInt
+
+
+solve_ : String
+solve_ =
+    let
+        schematic =
+            input
+                |> strToSchematic
+
+        nums =
+            schematic
+                |> schematicToNums ( 0, 0 )
+    in
     nums
-        |> List.filter (isNumTouchingSymbol schematic)
+        |> List.filter (isNumTouchingSymbol schematic Nothing)
         |> List.map numToInt
         |> List.sum
         |> String.fromInt
@@ -96,8 +115,8 @@ getFullNumStr ( x, y ) schematic =
             ""
 
 
-isNumTouchingSymbol : Schematic -> Num -> Bool
-isNumTouchingSymbol schematic num =
+isNumTouchingSymbol : Schematic -> Maybe ( Int, Int ) -> Num -> Bool
+isNumTouchingSymbol schematic maybeSpecificPos num =
     let
         numLength =
             num.numStr
@@ -125,7 +144,13 @@ isNumTouchingSymbol schematic num =
                     |> Dict.get neighbor
                     |> Maybe.map
                         (\char ->
-                            not (Char.isDigit char) && not (char == '.')
+                            case maybeSpecificPos of
+                                Just pos ->
+                                    pos == neighbor
+
+                                Nothing ->
+                                    not (Char.isDigit char)
+                                        && not (char == '.')
                         )
                     |> Maybe.withDefault False
             )
@@ -136,3 +161,18 @@ numToInt num =
     num.numStr
         |> String.toInt
         |> Maybe.withDefault -1
+
+
+gearPosToPower : Schematic -> List Num -> ( Int, Int ) -> Int
+gearPosToPower schematic nums pos =
+    let
+        touchingNums =
+            nums
+                |> List.filter (isNumTouchingSymbol schematic (Just pos))
+                |> List.map numToInt
+    in
+    if List.length touchingNums == 2 then
+        List.product touchingNums
+
+    else
+        0
