@@ -29,7 +29,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { output =
             -- Update this when starting new puzzle!
-            Day07.Solver.solve
+            Day05.Solver.solve
       }
     , Cmd.none
     )

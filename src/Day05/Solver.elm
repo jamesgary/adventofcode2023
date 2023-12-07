@@ -22,21 +22,87 @@ solve =
         lowestLocation =
             maps
                 |> List.reverse
-                |> findLowestLocation seedRanges
+                |> findLowestLocation 0 seedRanges
     in
     lowestLocation
         |> String.fromInt
 
 
-findLowestLocation : List ( Int, Int ) -> List (List Route) -> Int
-findLowestLocation seedRanges maps =
+
+{- Starting from location 0, search every location to see if there's a matching seed.
+   But that'll take too long! So we must skip. How can we smartly skip?
+   As we traverse from location to seed, see how much remaining "range" we have for every layer.
+   Take the minimum range for each traversal and skip that many seeds.
+-}
+
+
+findLowestLocation : Int -> List ( Int, Int ) -> List (List Route) -> Int
+findLowestLocation loc seedRanges maps =
+    case traverseUpToSource 9999999999999 loc seedRanges maps of
+        Nothing ->
+            -- success!
+            loc
+
+        Just minRange ->
+            let
+                _ =
+                    Debug.log "MR" minRange
+            in
+            findLowestLocation (loc + minRange) seedRanges maps
+
+
+traverseUpToSource : Int -> Int -> List ( Int, Int ) -> List (List Route) -> Maybe Int
+traverseUpToSource minRange dest seedRanges maps =
     case maps of
         [] ->
-            Debug.todo "empty list, should never get here!"
+            -- finished all maps, now is there a seed here?
+            let
+                found =
+                    seedRanges
+                        |> List.any
+                            (\( seedStart, seedRange ) ->
+                                seedStart <= dest && dest < seedStart + seedRange
+                            )
+            in
+            if found then
+                Nothing
 
-        finalMap ->
-            -- try to find seed for lowest route
-            Debug.todo "wutttttt"
+            else
+                Just minRange
+
+        -- r.sourceRangeStart <= source && source <= r.sourceRangeStart + r.rangeLength
+        map :: rest ->
+            -- still searching. get source for this dest
+            let
+                ( source, range ) =
+                    getSourceAndRangeFromDestForMap map dest
+            in
+            traverseUpToSource (min range minRange) source seedRanges rest
+
+
+getSourceAndRangeFromDestForMap : List Route -> Int -> ( Int, Int )
+getSourceAndRangeFromDestForMap map dest =
+    map
+        |> List.Extra.findMap
+            (\r ->
+                if r.destRangeStart <= dest && dest < r.destRangeStart + r.rangeLength then
+                    let
+                        range =
+                            (r.rangeLength - (dest - r.destRangeStart))
+                                |> max 1
+                                |> Debug.log "mrrrrrrr"
+                    in
+                    ( r.sourceRangeStart
+                        + (dest - r.destRangeStart)
+                    , range
+                    )
+                        |> Just
+
+                else
+                    Nothing
+            )
+        -- dest must be same as source
+        |> Maybe.withDefault ( dest, 9999999999999999 )
 
 
 inputToSeedRangesAndMaps : ( List ( Int, Int ), List (List Route) )
