@@ -57,6 +57,6 @@ view model =
         [ style "margin" "30px"
         , style "color" "white"
         , style "font-family" "monospace"
-        , style "font-size" "64px"
+        , style "font-size" "24px"
         ]
         [ Html.text model.output ]

@@ -11,7 +11,6 @@ ranks =
     [ 'A'
     , 'K'
     , 'Q'
-    , 'J'
     , 'T'
     , '9'
     , '8'
@@ -21,6 +20,7 @@ ranks =
     , '4'
     , '3'
     , '2'
+    , 'J' --joker
     ]
 
 
@@ -61,9 +61,9 @@ kindToComparable kind =
 solve : String
 solve =
     handsAndBids
-        -- |> List.sortBy (Tuple.first >> handToComparable)
         |> List.map (\( h, b ) -> ( ( h, b ), handToComparable h ))
         |> List.sortBy Tuple.second
+        |> Debug.log ""
         |> List.map Tuple.first
         |> List.reverse
         |> List.indexedMap
@@ -124,46 +124,67 @@ isHand kind hand_ =
                     (\( c, cs ) ->
                         c :: cs
                     )
+
+        jokerless =
+            groupedHand
+                |> List.filter
+                    (\cs ->
+                        List.all ((/=) 'J') cs
+                    )
+
+        sortedJokerlessGroupSizes =
+            jokerless
+                |> List.map List.length
+                |> List.sort
     in
     case kind of
         FiveOfAKind ->
-            groupedHand
-                |> List.any
-                    (\cs -> List.length cs == 5)
+            (List.length jokerless == 1)
+                || (List.length jokerless == 0)
 
         FourOfAKind ->
-            groupedHand
-                |> List.any
-                    (\cs -> List.length cs == 4)
+            case sortedJokerlessGroupSizes of
+                [ 1, _ ] ->
+                    True
+
+                _ ->
+                    False
 
         FullHouse ->
-            (groupedHand
-                |> List.any
-                    (\cs -> List.length cs == 3)
-            )
-                && (groupedHand
-                        |> List.any
-                            (\cs -> List.length cs == 2)
-                   )
+            case sortedJokerlessGroupSizes of
+                [ 2, 3 ] ->
+                    True
+
+                [ 2, _ ] ->
+                    True
+
+                _ ->
+                    False
 
         ThreeOfAKind ->
-            groupedHand
-                |> List.any
-                    (\cs -> List.length cs == 3)
+            case sortedJokerlessGroupSizes of
+                [ 1, 1, _ ] ->
+                    True
+
+                _ ->
+                    False
 
         TwoPair ->
-            groupedHand
-                |> List.filter
-                    (\cs -> List.length cs == 2)
-                |> List.length
-                |> (==) 2
+            case sortedJokerlessGroupSizes of
+                [ 1, 2, 2 ] ->
+                    True
+
+                _ ->
+                    False
 
         OnePair ->
-            groupedHand
+            (groupedHand
                 |> List.filter
                     (\cs -> List.length cs == 2)
                 |> List.length
                 |> (==) 1
+            )
+                || (hand |> List.member 'J')
 
         HighCard ->
             True
@@ -175,6 +196,7 @@ handToComparable hand =
         kind =
             hand
                 |> handToKind
+                --|> Debug.log (Debug.toString hand)
                 |> kindToComparable
 
         hand_ =
