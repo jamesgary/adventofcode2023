@@ -6,6 +6,10 @@ import List.Extra
 import Set exposing (Set)
 
 
+
+-- vegeta voice: it's over 2,440,000,000!!!
+
+
 inputToUse =
     input_
 
@@ -13,71 +17,87 @@ inputToUse =
 solve : String
 solve =
     let
-        ( inst, nodes, ( firstNode_, goalNode_ ) ) =
+        ( inst, nodes ) =
             parsedInput
 
-        -- D'oh, not actually first and last :P, can hardcode
-        firstNode =
-            "AAA"
-
-        goalNode =
-            "ZZZ"
+        startingNodes =
+            nodes
+                |> Dict.keys
+                |> List.filter (String.endsWith "A")
+                |> Debug.log "HI"
 
         stepsCount =
-            step inst nodes goalNode firstNode 1
+            step inst nodes startingNodes 0
     in
     stepsCount
         |> Debug.toString
 
 
-step : List Char -> Dict String ( String, String ) -> String -> String -> Int -> Int
-step inst nodes goalNode curNode stepsCount =
+isEndingNode : String -> Bool
+isEndingNode node =
+    node |> String.endsWith "Z"
+
+
+step : List Char -> Dict String ( String, String ) -> List String -> Int -> Int
+step inst nodes curNodes stepsCount =
     let
-        numInst =
-            inst
-                |> List.length
-
-        instCharIndex =
-            (stepsCount - 1) |> modBy numInst
-
-        instChar =
-            inst
-                |> List.Extra.getAt instCharIndex
-                |> Maybe.withDefault '?'
-
-        nextNode =
-            case Dict.get curNode nodes of
-                Just ( l, r ) ->
-                    let
-                        _ =
-                            Debug.log "?"
-
-                        --( curNode, instChar )
-                    in
-                    case instChar of
-                        'L' ->
-                            l
-
-                        'R' ->
-                            r
-
-                        _ ->
-                            Debug.todo "bad inst char"
-
-                Nothing ->
-                    Debug.todo "can't find node"
+        done =
+            curNodes
+                |> List.all isEndingNode
     in
-    if nextNode == goalNode then
+    --if stepsCount > 10000000 then
+    if stepsCount > 1000000000000 then
+        -5
+
+    else if done then
         stepsCount
 
-    else if stepsCount > 100000 then
-        -1
-
     else
-        step inst nodes goalNode nextNode (stepsCount + 1)
+        let
+            _ =
+                if (stepsCount |> modBy 1000000) == 0 then
+                    Debug.log "" stepsCount
+
+                else
+                    stepsCount
+
+            numInst =
+                inst
+                    |> List.length
+
+            instCharIndex =
+                stepsCount |> modBy numInst
+
+            instChar =
+                inst
+                    |> List.Extra.getAt instCharIndex
+                    |> Maybe.withDefault '?'
+
+            nextNodes =
+                curNodes
+                    |> List.map
+                        (\node ->
+                            case Dict.get node nodes of
+                                Just ( l, r ) ->
+                                    case instChar of
+                                        'L' ->
+                                            l
+
+                                        'R' ->
+                                            r
+
+                                        _ ->
+                                            Debug.todo "bad inst char"
+
+                                -- |> Debug.log (( instChar, node ) |> Debug.toString)
+                                Nothing ->
+                                    Debug.todo "can't find node"
+                        )
+        in
+        step inst nodes nextNodes (stepsCount + 1)
 
 
-parsedInput : ( List Char, Dict String ( String, String ), ( String, String ) )
+parsedInput : ( List Char, Dict String ( String, String ) )
 parsedInput =
     case inputToUse |> String.trim |> String.split "\n\n" of
         [ instStr, nodesStr ] ->
@@ -107,16 +127,6 @@ parsedInput =
                 |> String.toList
             , nodesList
                 |> Dict.fromList
-            , ( nodesList
-                    |> List.head
-                    |> Maybe.map Tuple.first
-                    |> Maybe.withDefault "???"
-              , nodesList
-                    |> List.reverse
-                    |> List.head
-                    |> Maybe.map Tuple.first
-                    |> Maybe.withDefault "???"
-              )
             )
 
         _ ->
