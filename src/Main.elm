@@ -8,6 +8,7 @@ import Day04.Solver
 import Day05.Solver
 import Day06.Solver
 import Day07.Solver
+import Day08.Solver
 import Html exposing (Html)
 import Html.Attributes as Attr exposing (style)
 
@@ -29,7 +30,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { output =
             -- Update this when starting new puzzle!
-            Day05.Solver.solve
+            Day08.Solver.solve
       }
     , Cmd.none
     )
