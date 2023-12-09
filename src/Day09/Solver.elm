@@ -19,11 +19,46 @@ solve =
 
         answer =
             histories
-                |> List.map getNextVal
+                |> List.map getPrevVal
                 |> List.sum
     in
     answer
         |> Debug.toString
+
+
+getPrevVal : List Int -> Int
+getPrevVal vals =
+    case vals of
+        [] ->
+            -- should never get here!
+            0
+
+        head :: tail ->
+            if tail |> List.all ((==) head) then
+                -- all matching, so we're done
+                -- (skipping 0 check for a bit of perf)
+                head
+
+            else
+                -- they differ, so get next val for diffs and add to last val
+                let
+                    diffs : List Int
+                    diffs =
+                        vals
+                            |> List.drop 1
+                            |> List.Extra.zip vals
+                            |> List.map (\( a, b ) -> b - a)
+
+                    prevDiffVal =
+                        getPrevVal diffs
+
+                    firstVal =
+                        vals
+                            |> List.head
+                            |> Maybe.withDefault -1
+                in
+                -- add next val to last val
+                firstVal - prevDiffVal
 
 
 getNextVal : List Int -> Int
