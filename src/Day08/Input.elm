@@ -29,7 +29,7 @@ inputB =
     """
 LR
 
-11A = (11B, XXX)
+11a = (11B, XXX)
 11B = (XXX, 11Z)
 11Z = (11B, XXX)
 22A = (22B, XXX)
