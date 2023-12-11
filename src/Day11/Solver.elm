@@ -11,6 +11,10 @@ inputToUse =
     input
 
 
+expansion =
+    1000000
+
+
 solve : String
 solve =
     let
@@ -24,28 +28,28 @@ solve =
                 |> List.map
                     (\charList ->
                         if List.all ((==) '.') charList then
-                            [ charList, charList ]
+                            -- 'X' represents 1,000,000
+                            List.repeat (List.length charList) 'X'
 
                         else
-                            [ charList ]
+                            charList
                     )
-                |> List.concat
                 -- expand universe cols (do the same thing, just transpose first)
                 |> List.Extra.transpose
                 |> List.map
                     (\charList ->
-                        if List.all ((==) '.') charList then
-                            [ charList, charList ]
+                        if List.all (\c -> c == '.' || c == 'X') charList then
+                            -- 'X' represents 1,000,000
+                            List.repeat (List.length charList) 'X'
 
                         else
-                            [ charList ]
+                            charList
                     )
-                |> List.concat
                 -- un-transpose
                 |> List.Extra.transpose
 
-        starCoords : List ( Int, Int )
-        starCoords =
+        unexpandedStarCoords : List ( Int, Int )
+        unexpandedStarCoords =
             charLists
                 |> List.indexedMap
                     (\y charList ->
@@ -62,9 +66,58 @@ solve =
                 |> List.concat
                 |> List.filterMap identity
 
+        unexpandedCoordToChar : Dict ( Int, Int ) Char
+        unexpandedCoordToChar =
+            charLists
+                |> List.indexedMap
+                    (\y charList ->
+                        charList
+                            |> List.indexedMap
+                                (\x char ->
+                                    ( ( x, y ), char )
+                                )
+                    )
+                |> List.concat
+                |> Dict.fromList
+
+        expandedStarCoords : List ( Int, Int )
+        expandedStarCoords =
+            unexpandedStarCoords
+                |> List.map
+                    (\( unexpandedX, unexpandedY ) ->
+                        let
+                            expandedX =
+                                List.range 0 unexpandedX
+                                    |> List.map
+                                        (\x ->
+                                            case unexpandedCoordToChar |> Dict.get ( x, unexpandedY ) of
+                                                Just 'X' ->
+                                                    expansion
+
+                                                _ ->
+                                                    1
+                                        )
+                                    |> List.sum
+
+                            expandedY =
+                                List.range 0 unexpandedY
+                                    |> List.map
+                                        (\y ->
+                                            case unexpandedCoordToChar |> Dict.get ( unexpandedX, y ) of
+                                                Just 'X' ->
+                                                    expansion
+
+                                                _ ->
+                                                    1
+                                        )
+                                    |> List.sum
+                        in
+                        ( expandedX, expandedY )
+                    )
+
         distSum : Int
         distSum =
-            starCoords
+            expandedStarCoords
                 |> List.Extra.uniquePairs
                 |> List.map
                     (\( ( x1, y1 ), ( x2, y2 ) ) ->
